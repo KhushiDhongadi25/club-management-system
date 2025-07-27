@@ -4,6 +4,6 @@ const userController = require('../controllers/userController');
 const verifyToken = require('../middleware/verifyToken');
 
 // GET /api/user/dashboard → Get user’s joined clubs and registered events
-router.get('/dashboard', verifyToken, userController.getUserDashboard);
+router.get('/dashboard', verifyToken, userController.getDashboard);
 
 module.exports = router;

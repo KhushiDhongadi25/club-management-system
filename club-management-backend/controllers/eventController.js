@@ -92,3 +92,78 @@ exports.getEventRegistrations = (req, res) => {
     res.status(200).json({ attendees: results });
   });
 };
+
+// Edit an existing event (Only by club creator)
+exports.updateEvent = (req, res) => {
+  const eventId = req.params.eventId;
+  const { title, description, date } = req.body;
+  const userId = req.user.id;
+
+  if (!title || !description || !date) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const checkSql = `
+    SELECT e.*, c.created_by AS clubCreator
+    FROM events e
+    JOIN clubs c ON e.club_id = c.id
+    WHERE e.id = ?
+  `;
+
+  db.query(checkSql, [eventId], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = results[0];
+    if (event.clubCreator !== userId) {
+      return res.status(403).json({ error: 'Only club admin can edit this event' });
+    }
+
+    const updateSql = `
+      UPDATE events
+      SET title = ?, description = ?, date = ?
+      WHERE id = ?
+    `;
+    db.query(updateSql, [title, description, date, eventId], (err2) => {
+      if (err2) {
+        return res.status(500).json({ error: 'Failed to update event' });
+      }
+
+      res.status(200).json({ message: 'Event updated successfully' });
+    });
+  });
+};
+
+// Delete an event (Only by club creator)
+exports.deleteEvent = (req, res) => {
+  const eventId = req.params.eventId;
+  const userId = req.user.id;
+
+  const checkSql = `
+    SELECT e.*, c.created_by AS clubCreator
+    FROM events e
+    JOIN clubs c ON e.club_id = c.id
+    WHERE e.id = ?
+  `;
+
+  db.query(checkSql, [eventId], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const event = results[0];
+    if (event.clubCreator !== userId) {
+      return res.status(403).json({ error: 'Only club admin can delete this event' });
+    }
+
+    const deleteSql = 'DELETE FROM events WHERE id = ?';
+    db.query(deleteSql, [eventId], (err2) => {
+      if (err2) {
+        return res.status(500).json({ error: 'Failed to delete event' });
+      }
+
+      res.status(200).json({ message: 'Event deleted successfully' });
+    });
+  });
+};

@@ -16,5 +16,7 @@ router.post('/register/:eventId', verifyToken, eventController.registerForEvent)
 // GET /api/events/attendees/:eventId → Get all users registered for an event
 router.get('/attendees/:eventId', verifyToken, eventController.getEventRegistrations);
 
+router.put('/events/:eventId', verifyToken, eventController.updateEvent);
+router.delete('/events/:eventId', verifyToken, eventController.deleteEvent);
 
 module.exports = router;
